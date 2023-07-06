@@ -1,0 +1,19 @@
+# This yaml file is for loading local database, server port, disable eureka and set jwt-rest-service endpoint
+SERVER_PORT: 8087
+
+POSTGRES_USERNAME: test
+POSTGRES_PASSWORD: test
+POSTGRES_DBNAME: token-mediator
+POSTGRES_SERVICE: localhost:5432
+DB_SSLMODE: disable
+
+EUREKA_HOST: localhost:8761
+EUREKA_USER: test
+EUREKA_PASSWORD: test
+EUREKA_CLIENT_ENABLED: true
+
+DEFAULT_ZONE: http://${EUREKA_USER}:${EUREKA_PASSWORD}@${EUREKA_HOST}/eureka
+
+ISSUER_URL: http://my-server:9001
+
+private-client-url: http://127.0.0.1:8090

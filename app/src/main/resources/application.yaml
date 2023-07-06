@@ -1,0 +1,39 @@
+server:
+  port: ${SERVER_PORT}
+
+logging:
+  level:
+    root: error
+    me.sonam.auth: info
+    org.springframework.web: info
+    org.springframework.security: info
+    org.springframework.security.oauth2: info
+    org.springframework.boot.autoconfigure: warn
+
+spring:
+  application:
+    name: authorization-server
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_SERVICE}/${POSTGRES_DBNAME}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    generate-ddl: true
+
+eureka:
+  client:
+    enabled: ${EUREKA_CLIENT_ENABLED}
+    serviceUrl:
+      defaultZone: ${DEFAULT_ZONE}
+
+issuerUrl: ${ISSUER_URL}
+authorizationEndpoint: ${issuerUrl}/oauth2/authorize
+tokenEndpoint: ${issuerUrl}/oauth2/token
+
+permitpath:
+  - path: /token-mediator/initiateOauthFlow
+    httpMethods: POST

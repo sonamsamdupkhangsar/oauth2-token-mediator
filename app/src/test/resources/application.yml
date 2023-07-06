@@ -1,0 +1,57 @@
+server:
+  port: 9012
+
+logging:
+  level:
+    org.springframework.security: trace
+
+spring:
+  security:
+    oauth2:
+      authorizationserver:
+        client:
+          oidc-client:
+            registration:
+              client-id: "articles-client"
+              client-secret: "{noop}secret"
+              client-authentication-methods:
+                - "client_secret_basic"
+              authorization-grant-types:
+                - "authorization_code"
+                - "refresh_token"
+              redirect-uris:
+                - "http://127.0.0.1:8080/login/oauth2/code/articles-client-oidc"
+              post-logout-redirect-uris:
+                - "http://127.0.0.1:8080/"
+              scopes:
+                - "openid"
+                - "profile"
+                - "articles.read"
+                - "articles-write"
+            require-authorization-consent: true
+  application:
+    name: authorization-server
+  datasource:
+    url: jdbc:hsqldb:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.hsqldb.jdbc.JDBCDriver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.HSQLDialect
+    generate-ddl: true
+
+eureka:
+  client:
+    enabled: false
+
+
+issuerUrl: http://my-server:9001
+authorizationEndpoint: ${issuerUrl}/oauth2/authorize
+tokenEndpoint: ${issuerUrl}/oauth2/token
+
+permitpath:
+  - path: /token-mediator/initiateOauthFlow
+    httpMethods: POST
+  - path: /oauth2/authorize
