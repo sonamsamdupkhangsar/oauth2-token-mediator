@@ -12,7 +12,7 @@ logging:
 
 spring:
   application:
-    name: authorization-server
+    name: token-mediator
   datasource:
     url: jdbc:postgresql://${POSTGRES_SERVICE}/${POSTGRES_DBNAME}
     username: ${POSTGRES_USERNAME}
@@ -23,7 +23,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     generate-ddl: true
-
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${ISSUER_URL}
 eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED}
@@ -31,9 +35,15 @@ eureka:
       defaultZone: ${DEFAULT_ZONE}
 
 issuerUrl: ${ISSUER_URL}
-authorizationEndpoint: ${issuerUrl}/oauth2/authorize
-tokenEndpoint: ${issuerUrl}/oauth2/token
+
+authorization:
+  root: ${ISSUER_URL}
+  path: /oauth2/authorize
+token:
+  root: ${ISSUER_URL}
+  path: /oauth2/token
 
 permitpath:
-  - path: /token-mediator/initiateOauthFlow
-    httpMethods: POST
+  - path: /token-mediator/oauth/authorize
+    httpMethods: GET
+  - path: /token-mediator/oauth/token

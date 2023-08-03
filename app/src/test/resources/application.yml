@@ -8,6 +8,9 @@ logging:
 spring:
   security:
     oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000
       authorizationserver:
         client:
           oidc-client:
@@ -48,10 +51,14 @@ eureka:
 
 
 issuerUrl: http://my-server:9001
-authorizationEndpoint: ${issuerUrl}/oauth2/authorize
-tokenEndpoint: ${issuerUrl}/oauth2/token
+authorization:
+  root: http://my-server:9001
+  path: /oauth2/authorize
+token:
+  root: http://my-server:9001
+  path: /oauth2/token
 
 permitpath:
-  - path: /token-mediator/initiateOauthFlow
-    httpMethods: POST
-  - path: /oauth2/authorize
+  - path: /token-mediator/oauth/authorize
+    httpMethods: GET
+  - path: /token-mediator/oauth/token
