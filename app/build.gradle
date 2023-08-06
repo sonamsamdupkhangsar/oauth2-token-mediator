@@ -53,8 +53,6 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.0.1'
     testImplementation 'net.sourceforge.htmlunit:htmlunit'
-    //testImplementation 'org.springframework.security:spring-security-oauth2-authorization-server'
-    //testImplementation 'me.sonam:my-spring-authorization-server:1.0'
 }
 
 

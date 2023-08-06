@@ -59,6 +59,8 @@ token:
   path: /oauth2/token
 
 permitpath:
-  - path: /token-mediator/oauth/authorize
+  - path: /oauth/authorize
     httpMethods: GET
-  - path: /token-mediator/oauth/token
+  - path: /oauth/token
+
+password: IforTibet

@@ -1,17 +1,23 @@
 package me.sonam.auth.service;
 
+import jakarta.annotation.PostConstruct;
 import me.sonam.auth.repo.ClientRepository;
+import me.sonam.auth.repo.entity.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.encrypt.Encryptors;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
-
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+@Service
 public class TokenMediatorService {
     private static final Logger LOG = LoggerFactory.getLogger(TokenMediatorService.class);
     @Value("${issuerUrl}")
@@ -23,9 +29,13 @@ public class TokenMediatorService {
     @Value("${token.root}${token.path}")
     private String tokenEndpoint;
 
+    @Value("${password}")
+    private String password;
+
     @Autowired
     private ClientRepository clientRepository;
 
+    private TextEncryptor textEncryptor;
     private WebClient.Builder webClientBuilder;
 
     public TokenMediatorService(WebClient.Builder webClientBuilder) {
@@ -45,5 +55,81 @@ public class TokenMediatorService {
         URI uri = UriComponentsBuilder.fromUriString(stringBuilder.toString()).build().encode().toUri();
         LOG.info("redirect user to {}", uri);
         return Mono.just(uri);
+    }
+
+    public Mono<String> getAccessToken(String clientId, String redirectUri, String grantType, String code, String scope) {
+        LOG.info("get access token (refresh token) with code");
+
+        StringBuilder stringBuilder = new StringBuilder(tokenEndpoint).append("?grant_type=")
+                .append(grantType)
+                .append("&redirect_uri=").append(redirectUri)
+                .append("&code=").append(code);
+
+        if (scope != null && !scope.isEmpty()){
+            stringBuilder.append("&scope=").append(scope);
+        }
+
+        LOG.info("requesting token to endpoint: {}", stringBuilder);
+        return getToken(stringBuilder.toString(), clientId);
+    }
+
+    public Mono<String> getRefreshToken(String grantType, String refreshToken, String clientId) {
+        LOG.info("refresh token");
+
+        StringBuilder stringBuilder = new StringBuilder(tokenEndpoint).append("?grant_type=")
+                .append(grantType)
+                .append("&refresh_token=").append(refreshToken);
+
+
+        return getToken(stringBuilder.toString(), clientId);
+    }
+
+    private Mono<String> getToken(String serviceEndpoint, String clientId) {
+        LOG.info("calling token endpoint with serviceEndpoint: {}, clientId: {}",
+                serviceEndpoint, clientId);
+
+        return clientRepository.findById(clientId)
+                .switchIfEmpty(Mono.error(new RuntimeException("No client with clientId")))
+                .flatMap(client -> client.decryptClientSecret(password))
+                .flatMap(decryptedClientSecret -> {
+                    StringBuilder clientSecret = new StringBuilder(clientId);
+
+                    clientSecret.append(":").append(decryptedClientSecret);
+                    Base64.Encoder encoder = Base64.getEncoder();
+                    String clientSecretb64 = encoder.encodeToString(clientSecret.toString().getBytes(StandardCharsets.UTF_8));
+                    LOG.info("encoded clientSecretb64: {}", clientSecretb64);
+                    return Mono.just(clientSecretb64);
+                })
+                .flatMap(clientSecretb64 ->webClientBuilder.build().post()
+                .uri(serviceEndpoint)
+                .headers(httpHeaders -> httpHeaders.setBasicAuth(clientSecretb64))
+                .retrieve().bodyToMono(String.class));
+    }
+
+    public Mono<Integer> saveClient(Client client) {
+        LOG.info("save client id and secret");
+
+        return clientRepository.findById(client.getClientId())
+                .switchIfEmpty(Mono.just(new Client(client.getClientId(), client.getClientSecret())))
+                .doOnNext(client1 -> client1.setClientRepository(clientRepository))
+                .doOnNext(client1 -> {
+                    LOG.info("doOnNext set secret");
+                    if(!client1.isNew()) {
+                        LOG.info("set client secret if not new");
+                        client1.setClientSecret(client.getClientSecret());
+                    }
+                })
+                .flatMap(client1 -> {LOG.info("save client"); return client1.save(password);})
+                .flatMap(client1 -> clientRepository.countByClientId(client1.getClientId()));
+    }
+
+    public Mono<String> deleteClient(String clientId) {
+        LOG.info("delete clientId: {}", clientId);
+        return clientRepository.deleteById(clientId).thenReturn(clientId);
+    }
+    public Mono<Client> getClient(String clientId) {
+        LOG.info("get client by clientId");
+        return clientRepository.findById(clientId).switchIfEmpty(
+                Mono.error(new RuntimeException("No client with clientId: "+ clientId)));
     }
 }

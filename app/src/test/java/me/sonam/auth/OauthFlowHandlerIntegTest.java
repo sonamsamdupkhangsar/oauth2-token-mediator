@@ -6,6 +6,7 @@ import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import me.sonam.auth.repo.entity.Client;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -24,18 +25,27 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @EnableAutoConfiguration
 @ExtendWith(SpringExtension.class)
@@ -57,6 +67,9 @@ public class OauthFlowHandlerIntegTest {
 
     @Autowired
     private WebTestClient webTestClient;
+
+    @MockBean
+    ReactiveJwtDecoder jwtDecoder;
 
     @BeforeEach
     public void setUp() {
@@ -99,7 +112,7 @@ public class OauthFlowHandlerIntegTest {
         final String redirectUri = "http://127.0.0.1:8090/login/oauth2/code/articles-client-oidc";
         final String state = "8RtmFZMz8LZXR29ieDTMyVHChjWhmUNE0C-gI7d4E3k";
 
-        StringBuilder stringBuilder = new StringBuilder("/token-mediator/oauth/authorize?response_type=")
+        StringBuilder stringBuilder = new StringBuilder("/oauth/authorize?response_type=")
                 .append(resonseType).append("&client_id=").append(clientId).append("&scope=")
                 .append(scope).append("&redirect_uri=").append(redirectUri)
                 .append("&state=").append(state);
@@ -116,18 +129,20 @@ public class OauthFlowHandlerIntegTest {
 
     @Test
     public void getAccessToken() throws Exception {
+        String clientId = saveClient();
+
         mockWebServer.enqueue(new MockResponse().setHeader("Content-Type", "application/json;charset=UTF-8")
                 .setResponseCode(200).setBody(refreshTokenResource.getContentAsString(StandardCharsets.UTF_8)));
 
 
-        URI uri = UriComponentsBuilder.fromUriString("/token-mediator/oauth/token")
+        URI uri = UriComponentsBuilder.fromUriString("/oauth/token")
                 .queryParam("grant_type", "authorization_code")
                 .queryParam("redirect_uri", "http://127.0.0.1:8090/login/oauth2/code/articles-client-oidc")
                 .queryParam("code", "GieqKyXaViGHZcfX-cwobX9SHnwXTs_nXkjCDEwFiDLp6QBNtPFKIrsPKE_Lml3opmr60O65ixXtGppZ20L51tRGpS75g7qp55OXAyoUiGvv_M4GaDhhy9g2LAymgXKn")
                 .queryParam("scope", "message.read message.write")
                 .build().encode().toUri();
         WebTestClient.ResponseSpec responseSpec = webTestClient.post().uri(uri)
-                .headers(httpHeaders -> httpHeaders.add("clientId", "nextjs-client"))
+                .headers(httpHeaders -> httpHeaders.add("client_id", clientId))
                 .exchange().expectStatus().isOk();
 
         LOG.info("response from service is {}", responseSpec.expectBody(String.class).returnResult().getResponseBody());
@@ -137,21 +152,87 @@ public class OauthFlowHandlerIntegTest {
         assertThat(recordedRequest.getPath()).startsWith("/oauth2/token");
     }
 
+    private String saveClient() {
+        final String authenticationId = "sonam";
+        Jwt jwt = jwt(authenticationId);
+        when(this.jwtDecoder.decode(anyString())).thenReturn(Mono.just(jwt));
+
+        Client client = new Client("myClientId", "secret");
+        webTestClient.put().uri("/oauth/clients")
+                .headers(addJwt(jwt)).contentType(MediaType.APPLICATION_JSON).bodyValue(client)
+                .exchange().expectStatus().isOk().expectBody(String.class).consumeWith(stringEntityExchangeResult -> {
+                    LOG.info("found clients with clientId: {}", stringEntityExchangeResult.getResponseBody());
+                });
+
+        return client.getClientId();
+    }
+
+    @Test
+    public void updateClient() {
+        final String authenticationId = "sonam";
+        Jwt jwt = jwt(authenticationId);
+        when(this.jwtDecoder.decode(anyString())).thenReturn(Mono.just(jwt));
+
+        String clientId = saveClient();
+
+        Client client = new Client(clientId, "secret");
+        LOG.info("do an update to client");
+        webTestClient.put().uri("/oauth/clients")
+                .headers(addJwt(jwt)).contentType(MediaType.APPLICATION_JSON).bodyValue(client)
+                .exchange().expectStatus().isOk().expectBody(String.class).consumeWith(stringEntityExchangeResult -> {
+                    LOG.info("found clients with clientId: {}", stringEntityExchangeResult.getResponseBody());
+                });
+
+        LOG.info("get client by clientId");
+
+        webTestClient.get().uri("/oauth/clients/"+clientId).headers(addJwt(jwt))
+                .exchange().expectStatus().isOk().expectBody(Client.class).consumeWith(clientEntityExchangeResult -> {
+                    LOG.info("found client: {}", clientEntityExchangeResult.getResponseBody());
+                });
+    }
+
+    @Test
+    public void deleteClient() {
+        LOG.info("delete client test");
+        String clientId = saveClient();
+
+        final String authenticationId = "sonam";
+        Jwt jwt = jwt(authenticationId);
+        when(this.jwtDecoder.decode(anyString())).thenReturn(Mono.just(jwt));
+
+        LOG.info("send request to delete client");
+        webTestClient.delete().uri("/oauth/clients/"+clientId)
+                .headers(addJwt(jwt))
+                .exchange().expectStatus().isOk().expectBody(String.class).consumeWith(stringEntityExchangeResult -> {
+                    LOG.info("delete client response: {}", stringEntityExchangeResult.getResponseBody());
+                });
+
+        LOG.info("verify client does not exist");
+        webTestClient.get().uri("/oauth/clients/"+clientId)
+                .headers(addJwt(jwt))
+                .exchange().expectStatus().isBadRequest().expectBody(Map.class).consumeWith(stringEntityExchangeResult -> {
+                    LOG.info("response: {}", stringEntityExchangeResult.getResponseBody().get("error"));
+                });
+
+    }
+
+
     @Test
     public void getRefreshToken() throws Exception {
         final String oldRefreshToken = "Qt85o6fATJEmq4j7MPUVD4UOw1xu-wVmKEpL55Nl8D_HSLeIVDq75GceC5nsFUE8ZdjcrT6pQFkCM" +
                 "-UzrFdbYYf8Zizw9Ioxo4ilO7GHBWj30edwqCcEcwrSST_G6n-Y";
 
+        String clientId = saveClient();
         mockWebServer.enqueue(new MockResponse().setHeader("Content-Type", "application/json;charset=UTF-8")
                 .setResponseCode(200).setBody(refreshTokenResource.getContentAsString(StandardCharsets.UTF_8)));
 
 
-        URI uri = UriComponentsBuilder.fromUriString("/token-mediator/oauth/token")
+        URI uri = UriComponentsBuilder.fromUriString("/oauth/token")
                 .queryParam("grant_type", "refresh_token")
                 .queryParam("refresh_token", oldRefreshToken)
                 .build().encode().toUri();
         WebTestClient.ResponseSpec responseSpec = webTestClient.post().uri(uri)
-                .headers(httpHeaders -> httpHeaders.add("client_id", "nextjs-client"))
+                .headers(httpHeaders -> httpHeaders.add("client_id", clientId))
                 .exchange().expectStatus().isOk();
 
         LOG.info("response from service is {}", responseSpec.expectBody(String.class).returnResult().getResponseBody());
@@ -248,5 +329,13 @@ public class OauthFlowHandlerIntegTest {
         assertThat(usernameInput).isNotNull();
         assertThat(passwordInput).isNotNull();
         assertThat(signInButton.getTextContent()).isEqualTo("Sign in");
+    }
+    private Jwt jwt(String subjectName) {
+        return new Jwt("token", null, null,
+                Map.of("alg", "none"), Map.of("sub", subjectName));
+    }
+
+    private Consumer<HttpHeaders> addJwt(Jwt jwt) {
+        return headers -> headers.setBearerAuth(jwt.getTokenValue());
     }
 }

@@ -1,0 +1,1 @@
+create table if not exists `Client` (client_id varchar primary key, client_secret varchar, salt varchar);

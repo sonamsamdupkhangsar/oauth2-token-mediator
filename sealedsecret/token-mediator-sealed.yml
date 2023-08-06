@@ -1,0 +1,17 @@
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: token-mediator-secret
+  namespace: backend
+spec:
+  encryptedData:
+    clientSecretPassword: AgAPXCprY+emMns2sHynTDztppUU9wf5DHg/9rGN5gTg1JZqS6bFE4xkHHWv3Zg859/aKkk9sOYhppNM8k4Atw42nJ3LV8tb9mSbzZs0+8koUoAcIFjkhxpVIgM1yEQMp3b5t7uJ6VowE8qv4rJmEjdC2y/GfKA8RZ8tpoPeJK30SwQ53IJdyX3CEFaYGIcMga/nSIdpKloDduvvHwtBluzmtz3lAuuDNmiAmCMmC+9/KfcaOYaW1+mDxFQ28wuSrXe6BGJUzdixhVtMV0hrrWt18WaPkYoXdhL+MAkkIg/W5YS88gdvxZDPJzX2NZoK+DereYzmjXbNj53i3kQjhLdUYGInUuk/vFZfX76ruFwpiXqS74lY/57cUrz+G56JdsUEp81Ail0VnMWf2fZ6+FZrj5wkqLuh7fRIJCgAOcVSlVoZZoGzWly1f+8ScWFb5Ow601hcgoNIE5KSKd29svhcXst68juCaKg93KXtklHrbNagTWQZZAwGxdD4j6u90oXjFEZgmJ4GN2F5q8Va/z2JWZAOg2inrIYkAXvV3Q/u49YeAhiyUPGrN8nQjnKZVfOSM6X7/We8E/6INZifDvfjMw0Q0r63LHnmColOPTVCgfU8VqcH9iH4MDpaMqLd4zDSNnZTXAIhmBqkLYI3G0l77uivbu48uq9TQIUTOOb2yyoXsrwWcL1jbBFQJM+VOJawOy4DonGg8/yqojrD+rlH9OZUWg==
+  template:
+    data: null
+    metadata:
+      creationTimestamp: null
+      name: token-mediator-secret
+      namespace: backend
+    type: Opaque
+

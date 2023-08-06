@@ -35,7 +35,6 @@ eureka:
       defaultZone: ${DEFAULT_ZONE}
 
 issuerUrl: ${ISSUER_URL}
-
 authorization:
   root: ${ISSUER_URL}
   path: /oauth2/authorize
@@ -47,3 +46,5 @@ permitpath:
   - path: /token-mediator/oauth/authorize
     httpMethods: GET
   - path: /token-mediator/oauth/token
+
+password: ${CLIENT_SECRET_PASSWORD}
