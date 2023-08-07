@@ -3,7 +3,7 @@ This is for mediating Oauth2 authorization and token creation process.
 
 This token-mediator will follow the `Token-Mediating Backend`  where the 
 client application makes a request to this project and which initiates the Oauth
-flow as described in [Token-Mediating Backend](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#name-token-mediating-backend)(Token-Mediating Backend).
+flow as described in [Token-Mediating Backend](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#name-token-mediating-backend).
 
 There are 2 endpoints:
 1. Initiate the OAuth flow
