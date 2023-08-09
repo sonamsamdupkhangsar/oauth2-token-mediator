@@ -50,9 +50,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation 'io.r2dbc:r2dbc-h2:1.0.0.RELEASE'
     testImplementation 'com.h2database:h2:2.1.214'
-    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.0.1'
-    testImplementation 'net.sourceforge.htmlunit:htmlunit'
 }
 
 

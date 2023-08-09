@@ -1,11 +1,6 @@
 package me.sonam.auth;
 
-import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.html.HtmlButton;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+
 import me.sonam.auth.repo.entity.Client;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -60,10 +55,6 @@ public class OauthFlowHandlerIntegTest {
     private Resource refreshTokenResource;
 
     private static MockWebServer mockWebServer;
-    @LocalServerPort
-    private int randomPort;
-
-    private WebClient webClient;
 
     @Autowired
     private WebTestClient webTestClient;
@@ -71,14 +62,8 @@ public class OauthFlowHandlerIntegTest {
     @MockBean
     ReactiveJwtDecoder jwtDecoder;
 
-    @BeforeEach
-    public void setUp() {
-        LOG.info("randomPort: {}", randomPort);
-        webClient = new WebClient();
-        this.webClient.getOptions().setThrowExceptionOnFailingStatusCode(true);
-        this.webClient.getOptions().setRedirectEnabled(true);
-        this.webClient.getCookieManager().clearCookies();	// log out
-    }
+
+
 
     @BeforeAll
     static void setupMockWebServer() throws IOException {
@@ -98,7 +83,7 @@ public class OauthFlowHandlerIntegTest {
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry r) throws IOException {
         r.add("issuerUrl", () -> "http://my-server:"+mockWebServer.getPort());
-        r.add("token.root", () -> "http://my-server:"+mockWebServer.getPort());
+        r.add("authorization.root", () -> "http://localhost:"+mockWebServer.getPort());
     }
 
     @Test
@@ -112,14 +97,14 @@ public class OauthFlowHandlerIntegTest {
         final String redirectUri = "http://127.0.0.1:8090/login/oauth2/code/articles-client-oidc";
         final String state = "8RtmFZMz8LZXR29ieDTMyVHChjWhmUNE0C-gI7d4E3k";
 
-        StringBuilder stringBuilder = new StringBuilder("/oauth/authorize?response_type=")
+        StringBuilder stringBuilder = new StringBuilder("/authorize?response_type=")
                 .append(resonseType).append("&client_id=").append(clientId).append("&scope=")
                 .append(scope).append("&redirect_uri=").append(redirectUri)
                 .append("&state=").append(state);
 
         WebTestClient.ResponseSpec responseSpec = webTestClient.get().uri(stringBuilder.toString()).
                 exchange().expectStatus().isTemporaryRedirect();
-        final String expectLocation = "http://my-server:9001/oauth2/authorize?response_type=code" +
+        final String expectLocation = "http://localhost:"+mockWebServer.getPort()+"/oauth2/authorize?response_type=code" +
                 "&client_id=articles-client&redirect_uri=http://127.0.0.1:8090/login/oauth2/code/articles-client-oidc" +
                 "&state="+state+"&scope=articles.read%20articles.write";
 
@@ -131,25 +116,29 @@ public class OauthFlowHandlerIntegTest {
     public void getAccessToken() throws Exception {
         String clientId = saveClient();
 
+        LOG.info("set mock response");
         mockWebServer.enqueue(new MockResponse().setHeader("Content-Type", "application/json;charset=UTF-8")
                 .setResponseCode(200).setBody(refreshTokenResource.getContentAsString(StandardCharsets.UTF_8)));
 
 
-        URI uri = UriComponentsBuilder.fromUriString("/oauth/token")
+        URI uri = UriComponentsBuilder.fromUriString("/token")
                 .queryParam("grant_type", "authorization_code")
                 .queryParam("redirect_uri", "http://127.0.0.1:8090/login/oauth2/code/articles-client-oidc")
                 .queryParam("code", "GieqKyXaViGHZcfX-cwobX9SHnwXTs_nXkjCDEwFiDLp6QBNtPFKIrsPKE_Lml3opmr60O65ixXtGppZ20L51tRGpS75g7qp55OXAyoUiGvv_M4GaDhhy9g2LAymgXKn")
                 .queryParam("scope", "message.read message.write")
                 .build().encode().toUri();
+        LOG.info("send request for access token");
         WebTestClient.ResponseSpec responseSpec = webTestClient.post().uri(uri)
                 .headers(httpHeaders -> httpHeaders.add("client_id", clientId))
                 .exchange().expectStatus().isOk();
 
-        LOG.info("response from service is {}", responseSpec.expectBody(String.class).returnResult().getResponseBody());
+
 
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertThat(recordedRequest.getMethod()).isEqualTo("POST");
         assertThat(recordedRequest.getPath()).startsWith("/oauth2/token");
+
+        LOG.info("response from service is {}", responseSpec.expectBody(String.class).returnResult().getResponseBody());
     }
 
     private String saveClient() {
@@ -158,7 +147,7 @@ public class OauthFlowHandlerIntegTest {
         when(this.jwtDecoder.decode(anyString())).thenReturn(Mono.just(jwt));
 
         Client client = new Client("myClientId", "secret");
-        webTestClient.put().uri("/oauth/clients")
+        webTestClient.put().uri("/clients")
                 .headers(addJwt(jwt)).contentType(MediaType.APPLICATION_JSON).bodyValue(client)
                 .exchange().expectStatus().isOk().expectBody(String.class).consumeWith(stringEntityExchangeResult -> {
                     LOG.info("found clients with clientId: {}", stringEntityExchangeResult.getResponseBody());
@@ -177,7 +166,7 @@ public class OauthFlowHandlerIntegTest {
 
         Client client = new Client(clientId, "secret");
         LOG.info("do an update to client");
-        webTestClient.put().uri("/oauth/clients")
+        webTestClient.put().uri("/clients")
                 .headers(addJwt(jwt)).contentType(MediaType.APPLICATION_JSON).bodyValue(client)
                 .exchange().expectStatus().isOk().expectBody(String.class).consumeWith(stringEntityExchangeResult -> {
                     LOG.info("found clients with clientId: {}", stringEntityExchangeResult.getResponseBody());
@@ -185,7 +174,7 @@ public class OauthFlowHandlerIntegTest {
 
         LOG.info("get client by clientId");
 
-        webTestClient.get().uri("/oauth/clients/"+clientId).headers(addJwt(jwt))
+        webTestClient.get().uri("/clients/"+clientId).headers(addJwt(jwt))
                 .exchange().expectStatus().isOk().expectBody(Client.class).consumeWith(clientEntityExchangeResult -> {
                     LOG.info("found client: {}", clientEntityExchangeResult.getResponseBody());
                 });
@@ -201,14 +190,14 @@ public class OauthFlowHandlerIntegTest {
         when(this.jwtDecoder.decode(anyString())).thenReturn(Mono.just(jwt));
 
         LOG.info("send request to delete client");
-        webTestClient.delete().uri("/oauth/clients/"+clientId)
+        webTestClient.delete().uri("/clients/"+clientId)
                 .headers(addJwt(jwt))
                 .exchange().expectStatus().isOk().expectBody(String.class).consumeWith(stringEntityExchangeResult -> {
                     LOG.info("delete client response: {}", stringEntityExchangeResult.getResponseBody());
                 });
 
         LOG.info("verify client does not exist");
-        webTestClient.get().uri("/oauth/clients/"+clientId)
+        webTestClient.get().uri("/clients/"+clientId)
                 .headers(addJwt(jwt))
                 .exchange().expectStatus().isBadRequest().expectBody(Map.class).consumeWith(stringEntityExchangeResult -> {
                     LOG.info("response: {}", stringEntityExchangeResult.getResponseBody().get("error"));
@@ -227,7 +216,7 @@ public class OauthFlowHandlerIntegTest {
                 .setResponseCode(200).setBody(refreshTokenResource.getContentAsString(StandardCharsets.UTF_8)));
 
 
-        URI uri = UriComponentsBuilder.fromUriString("/oauth/token")
+        URI uri = UriComponentsBuilder.fromUriString("/token")
                 .queryParam("grant_type", "refresh_token")
                 .queryParam("refresh_token", oldRefreshToken)
                 .build().encode().toUri();
@@ -241,95 +230,7 @@ public class OauthFlowHandlerIntegTest {
         assertThat(recordedRequest.getMethod()).isEqualTo("POST");
         assertThat(recordedRequest.getPath()).startsWith("/oauth2/token");
     }
-    private void sendLocation(String pageAddress) throws IOException {
-        HtmlPage page = this.webClient.getPage(pageAddress);
-        LOG.info("page: {}", page.toString());
-        assertLoginPage(page);
-        final String redirectUri = "http://127.0.0.1:8080/login/oauth2/code/articles-client-oidc";
 
-    /*    WebResponse approveConsentResponse = signIn(page, "sonam", "sonam").getWebResponse();
-        LOG.info("response: {}", approveConsentResponse.getContentAsString());
-
-        assertThat(approveConsentResponse.getStatusCode()).isEqualTo(HttpStatus.MOVED_PERMANENTLY.value());
-        String location = approveConsentResponse.getResponseHeaderValue("location");
-        assertThat(location).startsWith(redirectUri);
-        assertThat(location).contains("code=");
-*/
-        //HtmlPage consentPage = signIn(page, "sonam", "sonam");
-
-        /*assertThat(consentPage.getTitleText()).isEqualTo("Consent required");
-
-        List<HtmlCheckBoxInput> scopes = new ArrayList<>();
-        consentPage.querySelectorAll("input[name='scope']").forEach(scope ->
-                scopes.add((HtmlCheckBoxInput) scope));
-        for (HtmlCheckBoxInput scope : scopes) {
-            scope.click();
-        }
-
-        List<String> scopeIds = new ArrayList<>();
-        scopes.forEach(scope -> {
-            assertThat(scope.isChecked()).isTrue();
-            scopeIds.add(scope.getId());
-        });
-        assertThat(scopeIds).containsExactlyInAnyOrder("articles.read", "articles.write");
-
-        DomElement submitConsentButton = consentPage.querySelector("button[id='submit-consent']");
-        this.webClient.getOptions().setRedirectEnabled(false);
-
-        LOG.info("click on consent for all");
-
-        P p = submitConsentButton.click();
-        LOG.info("p.value: {}:", p.value());
-*/
-      /*  WebResponse approveConsentResponse = submitConsentButton.click().getWebResponse();
-        assertThat(approveConsentResponse.getStatusCode()).isEqualTo(HttpStatus.MOVED_PERMANENTLY.value());
-        String location = approveConsentResponse.getResponseHeaderValue("location");
-        assertThat(location).startsWith(redirectUri);
-        assertThat(location).contains("code=");*/
-
-        //assertThat(signInResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());	// there is no "default" index page
-
-    }
-
-    public void whenLoginSuccessfulThenDisplayNotFoundError() throws IOException, InterruptedException {
-        LOG.info("test whenLoginSuccessfulThenDisplayNotFoundError()");
-
-        assertThat(resource.exists()).isTrue();
-
-        mockWebServer.enqueue(new MockResponse().setHeader("Content-Type", "text/html;charset=UTF-8")
-                .setResponseCode(200).setBody(resource.getContentAsString(StandardCharsets.UTF_8)));
-
-        HtmlPage page = this.webClient.getPage("/");
-
-        assertLoginPage(page);
-
-        this.webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
-        WebResponse signInResponse = signIn(page, "user", "password").getWebResponse();
-
-        assertThat(signInResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());	// there is no "default" index page
-    }
-
-    private static <P extends Page> P signIn(HtmlPage page, String username, String password) throws IOException {
-        HtmlInput usernameInput = page.querySelector("input[name=\"username\"]");
-        HtmlInput passwordInput = page.querySelector("input[name=\"password\"]");
-        HtmlButton signInButton = page.querySelector("button");
-
-        usernameInput.type(username);
-        passwordInput.type(password);
-        return signInButton.click();
-    }
-
-    private static void assertLoginPage(HtmlPage page) {
-        assertThat(page.getUrl().toString()).endsWith("/login");
-
-        HtmlInput usernameInput = page.querySelector("input[name=\"username\"]");
-        HtmlInput passwordInput = page.querySelector("input[name=\"password\"]");
-        HtmlButton signInButton = page.querySelector("button");
-
-        assertThat(usernameInput).isNotNull();
-        assertThat(passwordInput).isNotNull();
-        assertThat(signInButton.getTextContent()).isEqualTo("Sign in");
-    }
     private Jwt jwt(String subjectName) {
         return new Jwt("token", null, null,
                 Map.of("alg", "none"), Map.of("sub", subjectName));

@@ -51,16 +51,15 @@ eureka:
 
 
 issuerUrl: http://my-server:9001
+
 authorization:
-  root: http://my-server:9001
-  path: /oauth2/authorize
-token:
-  root: http://my-server:9001
-  path: /oauth2/token
+  root: http://localhost
+  authorize: /oauth2/authorize
+  token: /oauth2/token
 
 permitpath:
-  - path: /oauth/authorize
+  - path: /authorize
     httpMethods: GET
-  - path: /oauth/token
+  - path: /token
 
 password: IforTibet

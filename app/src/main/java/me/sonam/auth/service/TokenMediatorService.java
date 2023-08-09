@@ -23,10 +23,10 @@ public class TokenMediatorService {
     @Value("${issuerUrl}")
     private String issuerUrl;
 
-    @Value("${authorization.root}${authorization.path}")
+    @Value("${authorization.root}${authorization.authorize}")
     private String authorizationEndpoint;
 
-    @Value("${token.root}${token.path}")
+    @Value("${authorization.root}${authorization.token}")
     private String tokenEndpoint;
 
     @Value("${password}")
