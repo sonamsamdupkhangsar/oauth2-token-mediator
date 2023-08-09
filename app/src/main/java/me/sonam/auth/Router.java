@@ -21,15 +21,15 @@ public class Router {
     @Bean
     public RouterFunction<ServerResponse> route(OauthFlowHandler handler) {
         LOG.info("building authenticate router function");
-        return RouterFunctions.route(GET("/authorize").and(accept(MediaType.APPLICATION_JSON)),
+        return RouterFunctions.route(GET("/oauth2-token-mediator/authorize").and(accept(MediaType.APPLICATION_JSON)),
                 handler::initateOauthFlow)
-                .andRoute(POST("/token").and(accept(MediaType.APPLICATION_JSON)),
+                .andRoute(POST("/oauth2-token-mediator/token").and(accept(MediaType.APPLICATION_JSON)),
                         handler::getAccessToken)
-                .andRoute(PUT("/clients").and(accept(MediaType.APPLICATION_JSON)),
+                .andRoute(PUT("/oauth2-token-mediator/clients").and(accept(MediaType.APPLICATION_JSON)),
                         handler::saveClient)
-                .andRoute(DELETE("/clients/{clientId}").and(accept(MediaType.APPLICATION_JSON)),
+                .andRoute(DELETE("/oauth2-token-mediator/clients/{clientId}").and(accept(MediaType.APPLICATION_JSON)),
                         handler::deleteClient)
-                .andRoute(GET("/clients/{clientId}").and(accept(MediaType.APPLICATION_JSON)),
+                .andRoute(GET("/oauth2-token-mediator/clients/{clientId}").and(accept(MediaType.APPLICATION_JSON)),
                         handler::getClient);
     }
 }

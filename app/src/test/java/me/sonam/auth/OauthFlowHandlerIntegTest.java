@@ -62,9 +62,6 @@ public class OauthFlowHandlerIntegTest {
     @MockBean
     ReactiveJwtDecoder jwtDecoder;
 
-
-
-
     @BeforeAll
     static void setupMockWebServer() throws IOException {
         mockWebServer = new MockWebServer();
@@ -97,7 +94,7 @@ public class OauthFlowHandlerIntegTest {
         final String redirectUri = "http://127.0.0.1:8090/login/oauth2/code/articles-client-oidc";
         final String state = "8RtmFZMz8LZXR29ieDTMyVHChjWhmUNE0C-gI7d4E3k";
 
-        StringBuilder stringBuilder = new StringBuilder("/authorize?response_type=")
+        StringBuilder stringBuilder = new StringBuilder("/oauth2-token-mediator/authorize?response_type=")
                 .append(resonseType).append("&client_id=").append(clientId).append("&scope=")
                 .append(scope).append("&redirect_uri=").append(redirectUri)
                 .append("&state=").append(state);
@@ -109,7 +106,6 @@ public class OauthFlowHandlerIntegTest {
                 "&state="+state+"&scope=articles.read%20articles.write";
 
         LOG.info("location: {}", responseSpec.expectHeader().location(expectLocation));
-       // sendLocation(expectLocation);
     }
 
     @Test
@@ -121,7 +117,7 @@ public class OauthFlowHandlerIntegTest {
                 .setResponseCode(200).setBody(refreshTokenResource.getContentAsString(StandardCharsets.UTF_8)));
 
 
-        URI uri = UriComponentsBuilder.fromUriString("/token")
+        URI uri = UriComponentsBuilder.fromUriString("/oauth2-token-mediator/token")
                 .queryParam("grant_type", "authorization_code")
                 .queryParam("redirect_uri", "http://127.0.0.1:8090/login/oauth2/code/articles-client-oidc")
                 .queryParam("code", "GieqKyXaViGHZcfX-cwobX9SHnwXTs_nXkjCDEwFiDLp6QBNtPFKIrsPKE_Lml3opmr60O65ixXtGppZ20L51tRGpS75g7qp55OXAyoUiGvv_M4GaDhhy9g2LAymgXKn")
@@ -147,7 +143,7 @@ public class OauthFlowHandlerIntegTest {
         when(this.jwtDecoder.decode(anyString())).thenReturn(Mono.just(jwt));
 
         Client client = new Client("myClientId", "secret");
-        webTestClient.put().uri("/clients")
+        webTestClient.put().uri("/oauth2-token-mediator/clients")
                 .headers(addJwt(jwt)).contentType(MediaType.APPLICATION_JSON).bodyValue(client)
                 .exchange().expectStatus().isOk().expectBody(String.class).consumeWith(stringEntityExchangeResult -> {
                     LOG.info("found clients with clientId: {}", stringEntityExchangeResult.getResponseBody());
@@ -166,7 +162,7 @@ public class OauthFlowHandlerIntegTest {
 
         Client client = new Client(clientId, "secret");
         LOG.info("do an update to client");
-        webTestClient.put().uri("/clients")
+        webTestClient.put().uri("/oauth2-token-mediator/clients")
                 .headers(addJwt(jwt)).contentType(MediaType.APPLICATION_JSON).bodyValue(client)
                 .exchange().expectStatus().isOk().expectBody(String.class).consumeWith(stringEntityExchangeResult -> {
                     LOG.info("found clients with clientId: {}", stringEntityExchangeResult.getResponseBody());
@@ -174,7 +170,7 @@ public class OauthFlowHandlerIntegTest {
 
         LOG.info("get client by clientId");
 
-        webTestClient.get().uri("/clients/"+clientId).headers(addJwt(jwt))
+        webTestClient.get().uri("/oauth2-token-mediator/clients/"+clientId).headers(addJwt(jwt))
                 .exchange().expectStatus().isOk().expectBody(Client.class).consumeWith(clientEntityExchangeResult -> {
                     LOG.info("found client: {}", clientEntityExchangeResult.getResponseBody());
                 });
@@ -190,14 +186,14 @@ public class OauthFlowHandlerIntegTest {
         when(this.jwtDecoder.decode(anyString())).thenReturn(Mono.just(jwt));
 
         LOG.info("send request to delete client");
-        webTestClient.delete().uri("/clients/"+clientId)
+        webTestClient.delete().uri("/oauth2-token-mediator/clients/"+clientId)
                 .headers(addJwt(jwt))
                 .exchange().expectStatus().isOk().expectBody(String.class).consumeWith(stringEntityExchangeResult -> {
                     LOG.info("delete client response: {}", stringEntityExchangeResult.getResponseBody());
                 });
 
         LOG.info("verify client does not exist");
-        webTestClient.get().uri("/clients/"+clientId)
+        webTestClient.get().uri("/oauth2-token-mediator/clients/"+clientId)
                 .headers(addJwt(jwt))
                 .exchange().expectStatus().isBadRequest().expectBody(Map.class).consumeWith(stringEntityExchangeResult -> {
                     LOG.info("response: {}", stringEntityExchangeResult.getResponseBody().get("error"));
@@ -216,7 +212,7 @@ public class OauthFlowHandlerIntegTest {
                 .setResponseCode(200).setBody(refreshTokenResource.getContentAsString(StandardCharsets.UTF_8)));
 
 
-        URI uri = UriComponentsBuilder.fromUriString("/token")
+        URI uri = UriComponentsBuilder.fromUriString("/oauth2-token-mediator/token")
                 .queryParam("grant_type", "refresh_token")
                 .queryParam("refresh_token", oldRefreshToken)
                 .build().encode().toUri();
