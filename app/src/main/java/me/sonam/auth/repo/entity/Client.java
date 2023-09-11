@@ -68,14 +68,15 @@ public class Client implements Persistable<String> {
 
         TextEncryptor textEncryptor = Encryptors.text(password, this.salt);
         this.clientSecret = textEncryptor.encrypt(this.clientSecret);
-        LOG.info("encryption done");
+        LOG.info("encryption done, saving: clientId: {}, clientSecret: {}", clientId, clientSecret);
         return clientRepository.save(this);
     }
 
-    public Mono<String> decryptClientSecret(String password) {
+   public Mono<String> decryptClientSecret(String password) {
         LOG.info("decrypt clientSecret with password");
         TextEncryptor textEncryptor = Encryptors.text(password, this.salt);
         var decryptedClientSecret = textEncryptor.decrypt(this.clientSecret);
+        LOG.info("clientSecret: {}, decryptedClientSecret: {}", clientSecret, decryptedClientSecret);
         return Mono.just(decryptedClientSecret);
     }
 

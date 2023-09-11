@@ -12,7 +12,7 @@ logging:
 
 spring:
   application:
-    name: token-mediator
+    name: oauth2-token-mediator
   datasource:
     url: jdbc:postgresql://${POSTGRES_SERVICE}/${POSTGRES_DBNAME}
     username: ${POSTGRES_USERNAME}

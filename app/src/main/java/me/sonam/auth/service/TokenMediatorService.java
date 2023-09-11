@@ -106,18 +106,22 @@ public class TokenMediatorService {
                 .retrieve().bodyToMono(String.class));
     }
 
-    public Mono<Integer> saveClient(Client client) {
+    public Mono<Integer> saveClient(Client userClientCopy) {
         LOG.info("save client id and secret");
 
-        return clientRepository.findById(client.getClientId())
-                .switchIfEmpty(Mono.just(new Client(client.getClientId(), client.getClientSecret())))
-                .doOnNext(client1 -> client1.setClientRepository(clientRepository))
-                .doOnNext(client1 -> {
-                    LOG.info("doOnNext set secret");
-                    if(!client1.isNew()) {
-                        LOG.info("set client secret if not new");
-                        client1.setClientSecret(client.getClientSecret());
+        return clientRepository.findById(userClientCopy.getClientId())
+                .switchIfEmpty(Mono.just(new Client(userClientCopy.getClientId(), userClientCopy.getClientSecret())))
+                .map(client1 -> {client1.setClientRepository(clientRepository); return client1;})
+                .map(client1 -> {
+                    if (userClientCopy.getClientSecret().startsWith("{")) {
+                        int indexOf = userClientCopy.getClientSecret().indexOf("}");
+                        final String secretWithoutEncoder = userClientCopy.getClientSecret()
+                                .substring(indexOf+1, userClientCopy.getClientSecret().length());
+
+                        client1.setClientSecret(secretWithoutEncoder);
+                        LOG.info("client secret without encoder: '{}'", secretWithoutEncoder);
                     }
+                    return client1;
                 })
                 .flatMap(client1 -> {LOG.info("save client"); return client1.save(password);})
                 .flatMap(client1 -> clientRepository.countByClientId(client1.getClientId()));
@@ -130,6 +134,16 @@ public class TokenMediatorService {
     public Mono<Client> getClient(String clientId) {
         LOG.info("get client by clientId");
         return clientRepository.findById(clientId).switchIfEmpty(
-                Mono.error(new RuntimeException("No client with clientId: "+ clientId)));
+                Mono.error(new RuntimeException("No client with clientId: "+ clientId)))
+                .flatMap(client ->
+
+
+                    client.decryptClientSecret(password)
+                            .map(decryptedSecret -> {
+                                client.setClientSecret(decryptedSecret);
+                                LOG.info("decrypt client secret before returing to user: decrypted: {}, actual: {}",
+                                        decryptedSecret, client.getClientSecret());
+                                return client;
+                            }));
     }
 }

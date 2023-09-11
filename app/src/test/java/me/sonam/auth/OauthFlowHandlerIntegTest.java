@@ -28,9 +28,11 @@ import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.net.URI;
@@ -142,13 +144,14 @@ public class OauthFlowHandlerIntegTest {
         Jwt jwt = jwt(authenticationId);
         when(this.jwtDecoder.decode(anyString())).thenReturn(Mono.just(jwt));
 
-        Client client = new Client("myClientId", "secret");
+        LOG.info("save client");
+        Client client = new Client("myClientId", "{noop}secret");
         webTestClient.put().uri("/oauth2-token-mediator/clients")
                 .headers(addJwt(jwt)).contentType(MediaType.APPLICATION_JSON).bodyValue(client)
                 .exchange().expectStatus().isOk().expectBody(String.class).consumeWith(stringEntityExchangeResult -> {
                     LOG.info("found clients with clientId: {}", stringEntityExchangeResult.getResponseBody());
                 });
-
+        LOG.info("client save call done");
         return client.getClientId();
     }
 
@@ -160,7 +163,7 @@ public class OauthFlowHandlerIntegTest {
 
         String clientId = saveClient();
 
-        Client client = new Client(clientId, "secret");
+        Client client = new Client(clientId, "{noop}secret");
         LOG.info("do an update to client");
         webTestClient.put().uri("/oauth2-token-mediator/clients")
                 .headers(addJwt(jwt)).contentType(MediaType.APPLICATION_JSON).bodyValue(client)
@@ -170,12 +173,27 @@ public class OauthFlowHandlerIntegTest {
 
         LOG.info("get client by clientId");
 
-        webTestClient.get().uri("/oauth2-token-mediator/clients/"+clientId).headers(addJwt(jwt))
-                .exchange().expectStatus().isOk().expectBody(Client.class).consumeWith(clientEntityExchangeResult -> {
-                    LOG.info("found client: {}", clientEntityExchangeResult.getResponseBody());
-                });
+        EntityExchangeResult<Client> entityExchangeResult = webTestClient.get().uri("/oauth2-token-mediator/clients/"+clientId).headers(addJwt(jwt))
+                .exchange().expectStatus().isOk().expectBody(Client.class).returnResult();
+        assertThat(entityExchangeResult.getResponseBody().getClientSecret()).isEqualTo("secret");
+        assertThat(entityExchangeResult.getResponseBody().getClientSecret()).isNotEqualTo("{noop}secret");
+        LOG.info("get client by clientId done");
     }
 
+    @Test
+    public void save() {
+        final String authenticationId = "sonam";
+        Jwt jwt = jwt(authenticationId);
+        when(this.jwtDecoder.decode(anyString())).thenReturn(Mono.just(jwt));
+
+        String clientId = saveClient();
+
+        EntityExchangeResult<Client> entityExchangeResult = webTestClient.get().uri("/oauth2-token-mediator/clients/"+clientId).headers(addJwt(jwt))
+                .exchange().expectStatus().isOk().expectBody(Client.class).returnResult();
+        assertThat(entityExchangeResult.getResponseBody().getClientSecret()).isEqualTo("secret");
+        assertThat(entityExchangeResult.getResponseBody().getClientSecret()).isNotEqualTo("{noop}secret");
+        LOG.info("get client by clientId done");
+    }
     @Test
     public void deleteClient() {
         LOG.info("delete client test");
