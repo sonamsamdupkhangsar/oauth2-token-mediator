@@ -90,17 +90,19 @@ envs:
   - name: ACCOUNT_REST_SERVICE
     value: http://account-rest-service
   - name: ISSUER_URL
-    value: http://authorization-server:9001
+    value: https://authorization.sonam.cloud/issuer
+  - name: OAUTH_CLIENTS
+    value: oauth-client
 
 health:
   liveness:
-    path: /api/health/liveness
+    path: /token-mediator/api/health/liveness
     port: 8080
     initialDelaySeconds: 10
     periodSeconds: 5
     failureThreshold: 5
   readiness:
-    path: /api/health/readiness
+    path: /token-mediator/api/health/readiness
     port: 8080
     initialDelaySeconds: 10
     periodSeconds: 5

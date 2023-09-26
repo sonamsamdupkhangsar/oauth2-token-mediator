@@ -26,7 +26,7 @@ repositories {
     mavenCentral()
     maven { url 'https://repo.spring.io/milestone' }
     maven {
-        url = uri("https://maven.pkg.github.com/sonamsamdupkhangsar/jwt-validator")
+        url = uri("https://maven.pkg.github.com/sonamsamdupkhangsar/token-filter")
         credentials {
             username = System.getenv("USERNAME")
             password = System.getenv("PERSONAL_ACCESS_TOKEN")
@@ -48,7 +48,7 @@ dependencies {
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.6'
     implementation 'io.projectreactor:reactor-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    implementation 'io.r2dbc:r2dbc-h2:1.0.0.RELEASE'
+    testImplementation 'io.r2dbc:r2dbc-h2:1.0.0.RELEASE'
     testImplementation 'com.h2database:h2:2.1.214'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.0.1'
