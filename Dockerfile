@@ -19,4 +19,4 @@ COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
 COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
 ENTRYPOINT ["java","-cp","app:app/lib/*","me.sonam.auth.Application"]
 
-LABEL org.opencontainers.image.source https://github.com/sonamsamdupkhangsar/user-rest-service
+LABEL org.opencontainers.image.source https://github.com/sonamsamdupkhangsar/token-mediator
