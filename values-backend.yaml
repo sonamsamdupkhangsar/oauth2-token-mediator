@@ -74,9 +74,9 @@ affinity: {}
 
 postgres:
   port: "5432"
-  service: user-minimal-cluster
-  secretfile: sonam.user-minimal-cluster.credentials.postgresql.acid.zalan.do
-  dbname: user
+  service: token-mediator-minimal-cluster
+  secretfile: sonam.token-mediator-minimal-cluster.credentials.postgresql.acid.zalan.do
+  dbname: token
 
 envs:
   - name: DB_SSLMODE
