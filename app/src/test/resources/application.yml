@@ -51,9 +51,13 @@ authorization:
   token: /oauth2/token
 
 permitpath:
-  - path: /token/mediator/health/*
+  - path: /token-mediator/api/health/*
   - path: /oauth2-token-mediator/authorize
     httpMethods: GET
   - path: /oauth2-token-mediator/token
 
 password: IforTibet
+
+token:
+  audiences: oauth-client
+  issuerUri: http://my-server:9001s

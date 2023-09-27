@@ -38,7 +38,7 @@ authorization:
   token: /oauth2/token
 
 permitpath:
-  - path: /token/mediator/api/health/*
+  - path: /token-mediator/api/health/*
   - path: /oauth2-token-mediator/authorize
     httpMethods: GET
   - path: /oauth2-token-mediator/token
