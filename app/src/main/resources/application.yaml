@@ -44,3 +44,7 @@ permitpath:
   - path: /oauth2-token-mediator/token
 
 password: ${CLIENT_SECRET_PASSWORD}
+
+token:
+  audiences: ${OAUTH_CLIENTS}
+  issuerUri: ${ISSUER_URL}
