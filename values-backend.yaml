@@ -76,7 +76,7 @@ postgres:
   port: "5432"
   service: token-mediator-minimal-cluster
   secretfile: sonam.token-mediator-minimal-cluster.credentials.postgresql.acid.zalan.do
-  dbname: token-mediator
+  dbname: tokenmediator
 
 envs:
   - name: SERVER_PORT
