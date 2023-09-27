@@ -83,6 +83,8 @@ envs:
     value: REQUIRE
   - name: EUREKA_HOST
     value: discovery-service.sonam.cloud
+  - name:  EUREKA_CLIENT_ENABLED
+    value: true
   - name: DEFAULT_ZONE
     value: https://${EUREKA_USER}:${EUREKA_PASSWORD}@${EUREKA_HOST}/eureka
   - name: AUTHENTICATION_REST_SERVICE
