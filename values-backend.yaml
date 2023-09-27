@@ -122,5 +122,6 @@ secretFiles:
       - key: scopes
         name: REQUEST_SCOPES
   - file: token-mediator-secret
+    keys:
       - key: clientSecretPassword
         name: CLIENT_SECRET_PASSWORD
