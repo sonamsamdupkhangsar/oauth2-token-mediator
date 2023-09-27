@@ -79,6 +79,8 @@ postgres:
   dbname: token-mediator
 
 envs:
+  - name: SERVER_PORT
+    value: 8080
   - name: DB_SSLMODE
     value: REQUIRE
   - name: EUREKA_HOST
