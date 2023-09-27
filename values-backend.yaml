@@ -102,13 +102,13 @@ health:
   liveness:
     path: /token-mediator/api/health/liveness
     port: 8080
-    initialDelaySeconds: 10
+    initialDelaySeconds: 60
     periodSeconds: 5
     failureThreshold: 5
   readiness:
     path: /token-mediator/api/health/readiness
     port: 8080
-    initialDelaySeconds: 10
+    initialDelaySeconds: 60
     periodSeconds: 5
     failureThreshold: 5
 
