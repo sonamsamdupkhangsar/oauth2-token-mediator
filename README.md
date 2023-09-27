@@ -23,7 +23,7 @@ Gradle build:
 ```
 Docker build passing in username and personal access token varaibles into docker to be used as environment variables in the gradle `build.gradle` file for pulling private maven artifact:
 ```
-docker build --secret id=USERNAME,env=USERNAME --secret id=PERSONAL_ACCESS_TOKEN,env=PERSONAL_ACCESS_TOKEN . -t my/oauth2-token-mediator
+docker build --secret id=USERNAME,src=USERNAME --secret id=PERSONAL_ACCESS_TOKEN,src=PERSONAL_ACCESS_TOKEN . -t my/oauth2-token-mediator
 ```
 
 Pass local profile as argument:
