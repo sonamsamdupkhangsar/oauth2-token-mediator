@@ -74,15 +74,19 @@ affinity: {}
 
 postgres:
   port: "5432"
-  service: user-minimal-cluster
-  secretfile: sonam.user-minimal-cluster.credentials.postgresql.acid.zalan.do
-  dbname: user
+  service: token-mediator-minimal-cluster
+  secretfile: sonam.token-mediator-minimal-cluster.credentials.postgresql.acid.zalan.do
+  dbname: tokenmediator
 
 envs:
+  - name: SERVER_PORT
+    value: 8080
   - name: DB_SSLMODE
     value: REQUIRE
   - name: EUREKA_HOST
     value: discovery-service.sonam.cloud
+  - name:  EUREKA_CLIENT_ENABLED
+    value: true
   - name: DEFAULT_ZONE
     value: https://${EUREKA_USER}:${EUREKA_PASSWORD}@${EUREKA_HOST}/eureka
   - name: AUTHENTICATION_REST_SERVICE
@@ -90,19 +94,21 @@ envs:
   - name: ACCOUNT_REST_SERVICE
     value: http://account-rest-service
   - name: ISSUER_URL
-    value: http://authorization-server:9001
+    value: https://authorization.sonam.cloud/issuer
+  - name: OAUTH_CLIENTS
+    value: oauth-client
 
 health:
   liveness:
-    path: /api/health/liveness
+    path: /token-mediator/api/health/liveness
     port: 8080
-    initialDelaySeconds: 10
+    initialDelaySeconds: 60
     periodSeconds: 5
     failureThreshold: 5
   readiness:
-    path: /api/health/readiness
+    path: /token-mediator/api/health/readiness
     port: 8080
-    initialDelaySeconds: 10
+    initialDelaySeconds: 60
     periodSeconds: 5
     failureThreshold: 5
 
@@ -120,5 +126,6 @@ secretFiles:
       - key: scopes
         name: REQUEST_SCOPES
   - file: token-mediator-secret
+    keys:
       - key: clientSecretPassword
         name: CLIENT_SECRET_PASSWORD

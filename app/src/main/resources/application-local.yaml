@@ -14,7 +14,6 @@ EUREKA_CLIENT_ENABLED: true
 
 DEFAULT_ZONE: http://${EUREKA_USER}:${EUREKA_PASSWORD}@${EUREKA_HOST}/eureka
 
-ISSUER_URL: http://my-server:9001
+ISSUER_URL: http://api-gateway:9001/issuer
 
-private-client-url: http://127.0.0.1:8090
 CLIENT_SECRET_PASSWORD: IforTibet
