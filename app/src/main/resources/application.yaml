@@ -24,11 +24,6 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${ISSUER_URL}
-eureka:
-  client:
-    enabled: ${EUREKA_CLIENT_ENABLED}
-    serviceUrl:
-      defaultZone: ${DEFAULT_ZONE}
 
 issuerUrl: ${ISSUER_URL}
 
