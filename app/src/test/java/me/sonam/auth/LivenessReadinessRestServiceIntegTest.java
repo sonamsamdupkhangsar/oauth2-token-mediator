@@ -31,14 +31,14 @@ public class LivenessReadinessRestServiceIntegTest {
   @Test
   public void readiness() {
     LOG.info("check readiness endpoint");
-    client.get().uri("/token-mediator/api/health/readiness")
+    client.get().uri("/oauth2-token-mediator/api/health/readiness")
             .exchange().expectStatus().isOk();
   }
 
   @Test
   public void liveness() {
     LOG.info("check liveness endpoint");
-    client.get().uri("/token-mediator/api/health/liveness")
+    client.get().uri("/oauth2-token-mediator/api/health/liveness")
             .exchange().expectStatus().isOk();
   }
 }
