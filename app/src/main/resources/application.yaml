@@ -3,7 +3,7 @@ server:
 
 logging:
   level:
-    root: error
+    root: info
     me.sonam.auth: info
     org.springframework.web: info
     org.springframework.security: info
@@ -34,7 +34,7 @@ authorization:
 
 permitpath:
   - path: /oauth2-token-mediator/api/health/*
-  - path: /oauth2-oauth2-token-mediator/authorize
+  - path: /oauth2-token-mediator/authorize
     httpMethods: GET
   - path: /oauth2-token-mediator/token
 
