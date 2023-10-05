@@ -120,6 +120,7 @@ public class OauthFlowHandlerIntegTest {
 
 
         URI uri = UriComponentsBuilder.fromUriString("/oauth2-token-mediator/token")
+                .queryParam("client_id", clientId)
                 .queryParam("grant_type", "authorization_code")
                 .queryParam("redirect_uri", "http://127.0.0.1:8090/login/oauth2/code/articles-client-oidc")
                 .queryParam("code", "GieqKyXaViGHZcfX-cwobX9SHnwXTs_nXkjCDEwFiDLp6QBNtPFKIrsPKE_Lml3opmr60O65ixXtGppZ20L51tRGpS75g7qp55OXAyoUiGvv_M4GaDhhy9g2LAymgXKn")
@@ -127,7 +128,6 @@ public class OauthFlowHandlerIntegTest {
                 .build().encode().toUri();
         LOG.info("send request for access token");
         WebTestClient.ResponseSpec responseSpec = webTestClient.post().uri(uri)
-                .headers(httpHeaders -> httpHeaders.add("client_id", clientId))
                 .exchange().expectStatus().isOk();
 
 
@@ -231,11 +231,11 @@ public class OauthFlowHandlerIntegTest {
 
 
         URI uri = UriComponentsBuilder.fromUriString("/oauth2-token-mediator/token")
+                .queryParam("client_id", clientId)
                 .queryParam("grant_type", "refresh_token")
                 .queryParam("refresh_token", oldRefreshToken)
                 .build().encode().toUri();
         WebTestClient.ResponseSpec responseSpec = webTestClient.post().uri(uri)
-                .headers(httpHeaders -> httpHeaders.add("client_id", clientId))
                 .exchange().expectStatus().isOk();
 
         LOG.info("response from service is {}", responseSpec.expectBody(String.class).returnResult().getResponseBody());

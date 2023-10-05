@@ -10,7 +10,7 @@ image:
 imagePullSecrets:
   - name: github-regcred
 nameOverride: ""
-fullnameOverride: ""
+fullnameOverride: "oauth2-token-mediator"
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -83,12 +83,6 @@ envs:
     value: 8080
   - name: DB_SSLMODE
     value: REQUIRE
-  - name: EUREKA_HOST
-    value: discovery-service.sonam.cloud
-  - name:  EUREKA_CLIENT_ENABLED
-    value: true
-  - name: DEFAULT_ZONE
-    value: https://${EUREKA_USER}:${EUREKA_PASSWORD}@${EUREKA_HOST}/eureka
   - name: AUTHENTICATION_REST_SERVICE
     value: http://authentication-rest-service
   - name: ACCOUNT_REST_SERVICE
@@ -100,25 +94,19 @@ envs:
 
 health:
   liveness:
-    path: /token-mediator/api/health/liveness
+    path: /oauth2-token-mediator/api/health/liveness
     port: 8080
     initialDelaySeconds: 60
     periodSeconds: 5
     failureThreshold: 5
   readiness:
-    path: /token-mediator/api/health/readiness
+    path: /oauth2-token-mediator/api/health/readiness
     port: 8080
     initialDelaySeconds: 60
     periodSeconds: 5
     failureThreshold: 5
 
 secretFiles:
-  - file: eureka-discovery
-    keys:
-      - key: user
-        name: EUREKA_USER
-      - key: password
-        name: EUREKA_PASSWORD
   - file: service-service-client-credential-flow-secret
     keys:
       - key: base64EncodedClientIdSecret

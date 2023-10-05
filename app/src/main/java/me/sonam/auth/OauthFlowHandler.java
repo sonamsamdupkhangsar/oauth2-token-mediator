@@ -43,7 +43,7 @@ public class OauthFlowHandler {
             LOG.info("grant_type is refresh token");
             return tokenMediatorService.getRefreshToken(serverRequest.queryParams().getFirst("grant_type"),
                     serverRequest.queryParams().getFirst("refresh_token"),
-                    serverRequest.headers().firstHeader("client_id"))
+                    serverRequest.queryParams().getFirst("client_id"))
                     .flatMap(token -> ServerResponse.ok().bodyValue(token))
                     .onErrorResume(throwable -> {
                         LOG.error("failed to get access tokens", throwable);
@@ -52,11 +52,11 @@ public class OauthFlowHandler {
                     });
         }
 
-        LOG.info("check server query params: {}, hello header value is: {}",
-                serverRequest.queryParams(), serverRequest.headers().header("hello"));
+        LOG.info("check server query params: {}", serverRequest.queryParams());
+
 
         return tokenMediatorService.getAccessToken(
-                serverRequest.headers().firstHeader("client_id"),
+                serverRequest.queryParams().getFirst("client_id"),
                 serverRequest.queryParams().getFirst("redirect_uri"),
                 serverRequest.queryParams().getFirst("grant_type"),
                 serverRequest.queryParams().getFirst("code"),

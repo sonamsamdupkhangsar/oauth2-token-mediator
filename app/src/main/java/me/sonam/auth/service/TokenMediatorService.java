@@ -58,7 +58,7 @@ public class TokenMediatorService {
     }
 
     public Mono<String> getAccessToken(String clientId, String redirectUri, String grantType, String code, String scope) {
-        LOG.info("get access token (refresh token) with code");
+        LOG.info("building request with clientId: {}", clientId);
 
         StringBuilder stringBuilder = new StringBuilder(tokenEndpoint).append("?grant_type=")
                 .append(grantType)
