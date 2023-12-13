@@ -88,7 +88,7 @@ envs:
   - name: ACCOUNT_REST_SERVICE
     value: http://account-rest-service
   - name: ISSUER_URI
-    value: https://api-gateway.sonam.cloud/issuer
+    value: https://authorization.sonam.cloud/issuer
   - name: OAUTH_AUDIENCES
     value: oauth-client
 
