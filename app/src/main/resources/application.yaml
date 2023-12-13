@@ -23,12 +23,11 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${ISSUER_URL}
-
-issuerUrl: ${ISSUER_URL}
+          issuer-uri: ${ISSUER_URI}
+          audiences: ${OAUTH_AUDIENCES}
 
 authorization:
-  root: ${ISSUER_URL}
+  root: ${ISSUER_URI}
   authorize: /oauth2/authorize
   token: /oauth2/token
 
@@ -39,7 +38,3 @@ permitpath:
   - path: /oauth2-token-mediator/token
 
 password: ${CLIENT_SECRET_PASSWORD}
-
-token:
-  audiences: ${OAUTH_CLIENTS}
-  issuerUri: ${ISSUER_URL}

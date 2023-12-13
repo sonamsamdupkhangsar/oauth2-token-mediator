@@ -1,13 +1,11 @@
 package me.sonam.auth.service;
 
-import jakarta.annotation.PostConstruct;
 import me.sonam.auth.repo.ClientRepository;
 import me.sonam.auth.repo.entity.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -20,8 +18,6 @@ import java.util.Base64;
 @Service
 public class TokenMediatorService {
     private static final Logger LOG = LoggerFactory.getLogger(TokenMediatorService.class);
-    @Value("${issuerUrl}")
-    private String issuerUrl;
 
     @Value("${authorization.root}${authorization.authorize}")
     private String authorizationEndpoint;

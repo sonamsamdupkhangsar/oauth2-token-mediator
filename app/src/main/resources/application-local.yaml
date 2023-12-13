@@ -17,8 +17,11 @@ eureka:
     serviceUrl:
       defaultZone: http://${EUREKA_USER}:${EUREKA_PASSWORD}@${EUREKA_HOST}/eureka
 
-OAUTH_CLIENTS: nextjs-client, oauth-client
-ISSUER_URL: http://api-gateway:9001/issuer
+ISSUER_ADDRESS: http://api-gateway:9001
+
+ISSUER_URI: ${ISSUER_ADDRESS}/issuer
+OAUTH_AUDIENCES: nextjs-client, oauth-client
+#JWT_SET_URI: ${ISSUER_ADDRESS}/issuer/.well-known/jwks.json
 
 CLIENT_SECRET_PASSWORD: IforTibet
 spring:
