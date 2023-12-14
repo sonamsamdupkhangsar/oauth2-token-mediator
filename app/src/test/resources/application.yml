@@ -11,6 +11,8 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9000
+          jwk-set-uri: http://localhost:9000/issuer/.well-known/jwks.json
+          audiences: oauth-client
       authorizationserver:
         client:
           oidc-client:
@@ -58,6 +60,6 @@ permitpath:
 
 password: IforTibet
 
-token:
-  audiences: oauth-client
-  issuerUri: http://my-server:9001s
+#token:
+#  audiences: oauth-client
+#  issuerUri: http://my-server:9001s
