@@ -117,3 +117,7 @@ secretFiles:
     keys:
       - key: clientSecretPassword
         name: CLIENT_SECRET_PASSWORD
+  - file: newrelic-secret
+    keys:
+      - key: newrelic.license_key
+        name: NEW_RELIC_LICENSE_KEY
